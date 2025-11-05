@@ -314,12 +314,12 @@ export function ChatKitPanel({
       if (invocation.name === "download_docx") {
         const fileName = String(invocation.params.file_name ?? "");
         const dataUrl = String(invocation.params.data_url ?? "");
-      if (fileName && dataUrl) {
-        await downloadFromDataUrl(dataUrl, fileName);
-        return { success: true };
+        if (fileName && dataUrl) {
+          await downloadFromDataUrl(dataUrl, fileName);
+          return { success: true };
+        }
+        return { success: false };
       }
-      return { success: false };
-    }
 
       if (invocation.name === "record_fact") {
         const id = String(invocation.params.fact_id ?? "");
