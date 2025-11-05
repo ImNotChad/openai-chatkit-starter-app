@@ -13,6 +13,19 @@ import {
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 
+async function downloadFromDataUrl(dataUrl, fileName) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export type FactAction = {
   type: "save";
   factId: string;
@@ -296,6 +309,17 @@ export function ChatKitPanel({
         }
         return { success: false };
       }
+
+
+      if (invocation.name === "download_docx") {
+        const fileName = String(invocation.params.file_name ?? "");
+        const dataUrl = String(invocation.params.data_url ?? "");
+      if (fileName && dataUrl) {
+        await downloadFromDataUrl(dataUrl, fileName);
+        return { success: true };
+      }
+      return { success: false };
+    }
 
       if (invocation.name === "record_fact") {
         const id = String(invocation.params.fact_id ?? "");
