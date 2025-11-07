@@ -13,11 +13,11 @@ import {
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 
-async function downloadFromDataUrl(dataUrl, fileName) {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<void> {
+  const res: Response = await fetch(dataUrl);
+  const blob: Blob = await res.blob();
+  const url: string = URL.createObjectURL(blob);
+  const a: HTMLAnchorElement = document.createElement("a");
   a.href = url;
   a.download = fileName;
   document.body.appendChild(a);
@@ -311,8 +311,8 @@ export function ChatKitPanel({
       }
 
       if (invocation.name === "download_docx") {
-        const fileName = String(invocation.params.file_name ?? "Requirements.docx");
-        const dataUrl = String(invocation.params.data_url ?? "");
+        const fileName: string = String(invocation.params.file_name ?? "Requirements.docx");
+        const dataUrl: string  = String(invocation.params.data_url  ?? "");
         if (fileName && dataUrl) {
           await downloadFromDataUrl(dataUrl, fileName);
           return { success: true };
