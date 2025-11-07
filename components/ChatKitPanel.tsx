@@ -13,13 +13,23 @@ import {
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 
-async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<void> {
-  const res: Response = await fetch(dataUrl);
-  const blob: Blob = await res.blob();
-  const url: string = URL.createObjectURL(blob);
-  const a: HTMLAnchorElement = document.createElement("a");
+async function downloadFromDataUrl(dataUrl: string, fileName: string) {
+  let b64 = dataUrl;
+  const i = dataUrl.indexOf("base64,");
+  if (i !== -1) b64 = dataUrl.slice(i + 7);
+  b64 = b64.replace(/\s/g, ""); // remove any breaks or spaces
+
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+
+  const blob = new Blob([bytes], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
   a.href = url;
-  a.download = fileName;
+  a.download = fileName.toLowerCase().endsWith(".docx") ? fileName : `${fileName}.docx`;
   document.body.appendChild(a);
   a.click();
   a.remove();
