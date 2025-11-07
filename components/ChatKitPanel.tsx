@@ -13,27 +13,26 @@ import {
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 
-async function downloadFromDataUrl(dataUrl: string, fileName: string) {
-  let b64 = dataUrl;
-  const i = dataUrl.indexOf("base64,");
-  if (i !== -1) b64 = dataUrl.slice(i + 7);
-  b64 = b64.replace(/\s/g, ""); // remove any breaks or spaces
-
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
-
-  const blob = new Blob([bytes], {
-    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName.toLowerCase().endsWith(".docx") ? fileName : `${fileName}.docx`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<void> {
+  try {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName.toLowerCase().endsWith(".docx") ? fileName : `${fileName}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("Failed to download file:", error);
+    throw error;
+  }
 }
 
 function ensureDocxDataUrl(input: string): string {
