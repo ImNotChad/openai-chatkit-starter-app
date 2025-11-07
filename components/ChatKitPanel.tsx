@@ -26,6 +26,22 @@ async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<v
   URL.revokeObjectURL(url);
 }
 
+function ensureDocxDataUrl(input: string): string {
+  if (!input) return "";
+  if (input.startsWith("data:")) {
+    return input.replace(
+      /^data:(vnd\.openxmlformats-officedocument\.wordprocessingml\.document)/,
+      "data:application/$1"
+    );
+  }
+  return "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + input;
+}
+
+function ensureDocxFileName(name: string): string {
+  const trimmed = (name || "Requirements.docx").trim();
+  return trimmed.toLowerCase().endsWith(".docx") ? trimmed : `${trimmed}.docx`;
+}
+
 export type FactAction = {
   type: "save";
   factId: string;
@@ -311,8 +327,13 @@ export function ChatKitPanel({
       }
 
       if (invocation.name === "download_docx") {
-        const fileName: string = String(invocation.params.file_name ?? "Requirements.docx");
-        const dataUrl: string  = String(invocation.params.data_url  ?? "");
+        const fileName: string = ensureDocxFileName(
+          String(invocation.params.file_name ?? "Requirements.docx")
+        );
+        const dataUrl: string = ensureDocxDataUrl(
+          String(invocation.params.data_url ?? "")
+        );
+      
         if (fileName && dataUrl) {
           await downloadFromDataUrl(dataUrl, fileName);
           return { success: true };
