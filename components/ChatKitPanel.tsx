@@ -15,25 +15,42 @@ import type { ColorScheme } from "@/hooks/useColorScheme";
 
 async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<void> {
   try {
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    
+    // Extract base64 part
+    let b64 = dataUrl;
+    const idx = dataUrl.indexOf("base64,");
+    if (idx !== -1) {
+      b64 = dataUrl.slice(idx + "base64,".length);
+    }
+    // Remove any whitespace/newlines that might break decoding
+    b64 = b64.replace(/\s/g, "");
+
+    // Decode base64 → bytes
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    // Create a DOCX blob
+    const blob = new Blob([bytes], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    // Download it
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = fileName.toLowerCase().endsWith(".docx") ? fileName : `${fileName}.docx`;
     document.body.appendChild(a);
     a.click();
-    
-    setTimeout(() => {
-      a.remove();
-      URL.revokeObjectURL(url);
-    }, 100);
+    a.remove();
+    URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Failed to download file:", error);
     throw error;
   }
 }
+
 
 function ensureDocxDataUrl(input: string): string {
   if (!input) return "";
