@@ -24,7 +24,7 @@ async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<v
     // Remove any whitespace/newlines that might break decoding
     b64 = b64.replace(/\s/g, "");
 
-    // Decode base64 → bytes
+    // Decode base64 -> bytes
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
@@ -50,6 +50,7 @@ async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<v
     throw error;
   }
 }
+
 
 
 function ensureDocxDataUrl(input: string): string {
