@@ -15,38 +15,42 @@ import type { ColorScheme } from "@/hooks/useColorScheme";
 
 async function downloadFromDataUrl(dataUrl: string, fileName: string): Promise<void> {
   try {
-    const cleaned = dataUrl.trim();
+    // Browser already understands data: URLs, just fetch and blob them
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
 
-    // It should already be a full data URL from the agent
-    if (!cleaned.startsWith("data:")) {
-      console.error("Expected a data: URL, got:", cleaned.slice(0, 80));
-      return;
-    }
-
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = cleaned;
+    a.href = url;
     a.download = fileName.toLowerCase().endsWith(".docx") ? fileName : `${fileName}.docx`;
-
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
   } catch (error) {
     console.error("Failed to download file:", error);
     throw error;
   }
 }
 
-
 function ensureDocxDataUrl(input: string): string {
-  return input || "";
   if (!input) return "";
-  if (input.startsWith("data:")) {
-    return input.replace(
-      /^data:(vnd\.openxmlformats-officedocument\.wordprocessingml\.document)/,
-      "data:application/$1"
-    );
+
+  const trimmed = input.trim();
+
+  // If the agent already sent a full data: URL, keep it as-is
+  if (trimmed.startsWith("data:")) {
+    return trimmed;
   }
-  return "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + input;
+
+  // Otherwise, assume it's raw base64 and add the proper DOCX header
+  return (
+    "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," +
+    trimmed
+  );
 }
 
 function ensureDocxFileName(name: string): string {
@@ -326,15 +330,16 @@ export function ChatKitPanel({
       name: string;
       params: Record<string, unknown>;
     }) => {
-      if (invocation.name === "switch_theme") {
-        const requested = invocation.params.theme;
-        if (requested === "light" || requested === "dark") {
-          if (isDev) {
-            console.debug("[ChatKitPanel] switch_theme", requested);
-          }
-          onThemeRequest(requested);
+      if (invocation.name === "download_docx") {
+        const fileName = String(invocation.params.file_name ?? "Requirements.docx");
+        const rawDataUrl = String(invocation.params.data_url ?? "");
+        const dataUrl = ensureDocxDataUrl(rawDataUrl);
+
+        if (fileName && dataUrl) {
+          await downloadFromDataUrl(dataUrl, fileName);
           return { success: true };
         }
+      
         return { success: false };
       }
 
