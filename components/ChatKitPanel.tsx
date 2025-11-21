@@ -330,19 +330,7 @@ export function ChatKitPanel({
       name: string;
       params: Record<string, unknown>;
     }) => {
-      if (invocation.name === "download_docx") {
-        const fileName = String(invocation.params.file_name ?? "Requirements.docx");
-        const rawDataUrl = String(invocation.params.data_url ?? "");
-        const dataUrl = ensureDocxDataUrl(rawDataUrl);
-
-        if (fileName && dataUrl) {
-          await downloadFromDataUrl(dataUrl, fileName);
-          return { success: true };
-        }
-      
-        return { success: false };
-      }
-
+     
       if (invocation.name === "download_docx") {
         const fileName: string = ensureDocxFileName(
           String(invocation.params.file_name ?? "Requirements.docx")
